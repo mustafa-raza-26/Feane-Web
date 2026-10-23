@@ -1,0 +1,49 @@
+/* Checkout / bill page.
+   Scoped under .bill-page (the original bill.css restyled <body> globally,
+   which would affect every other page in a single-page app). */
+
+.bill-page {
+    --gold-primary: #f3af3d;
+    --bg-card: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Force all standard text, labels, and muted text to be white/light */
+.bill-page p,
+.bill-page label,
+.bill-page span,
+.bill-page .text-muted {
+    color: #f8f9fa !important;
+}
+
+.bill-page .card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Form inputs text color */
+.bill-page .form-control,
+.bill-page .form-select,
+.bill-page textarea {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #495057 !important;
+}
+
+.bill-page .form-control::placeholder,
+.bill-page textarea::placeholder {
+    color: #adb5bd !important;
+    opacity: 1;
+}
+
+.bill-page .form-control:focus,
+.bill-page .form-select:focus {
+    background-color: #212121 !important;
+    color: #ffffff !important;
+    border-color: var(--gold-primary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(243, 175, 61, 0.25);
+}
+
+.bill-page #confirm-order-btn:hover {
+    filter: brightness(1.1);
+}

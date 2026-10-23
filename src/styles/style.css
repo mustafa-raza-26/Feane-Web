@@ -1,0 +1,611 @@
+/* ==========================================
+   1. GLOBAL VARIABLES & RESET
+   ========================================== */
+:root {
+    --bg-deep: #0a0b0f;
+    --bg-surface: #13151c;
+    --bg-card: #191b24;
+    --bg-card-hover: #1f222e;
+    
+    --gold-primary: #f3af3d;
+    --gold-hover: #e09b25;
+    --gold-glow: rgba(243, 175, 61, 0.25);
+    
+    --text-light: #ffffff;
+    --text-muted: #9da1b0;
+    
+    --font-script: "Dancing Script", cursive;
+    --font-sans: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-light);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+}
+
+/* ==========================================
+   2. HERO SECTION & NAVIGATION (PART 1)
+   ========================================== */
+.part1 {
+    padding-top: 10px;
+    padding-bottom: 90px;
+    background-position: center;
+    background-size: cover;
+    background-image: linear-gradient(180deg, rgba(10, 11, 15, 0.85) 0%, rgba(10, 11, 15, 0.95) 100%), url("../assets/img/hero-bg.jpg");
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.container-fluid > .navbar-brand h1 {
+    color: var(--text-light) !important;
+    font-size: 42px !important;
+    font-family: var(--font-script);
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: var(--transition);
+}
+
+.container-fluid > .navbar-brand:hover h1 {
+    color: var(--gold-primary) !important;
+    text-shadow: 0 0 20px var(--gold-glow);
+}
+
+.nav-item {
+    margin-right: 16px;
+}
+
+.nav-item a {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-light) !important;
+    transition: var(--transition);
+}
+
+.nav-item a:hover,
+.nav-item .hm {
+    color: var(--gold-primary) !important;
+}
+
+.navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--bg-surface);
+}
+
+.navbar-toggler-icon {
+    filter: invert(1);
+}
+
+/* Nav Icons & Order Online Button */
+.nav-item.icon a {
+    font-size: 16px;
+    padding: 10px 12px;
+    background: var(--bg-surface);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    transition: var(--transition);
+}
+
+.nav-item.icon a:hover {
+    background: var(--gold-primary);
+    color: #111 !important;
+    border-color: var(--gold-primary);
+    transform: translateY(-2px);
+}
+
+.nav-item.butt {
+    background: var(--gold-primary);
+    border-radius: 30px;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 15px var(--gold-glow);
+    transition: var(--transition);
+}
+
+.nav-item.butt:hover {
+    background: var(--gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--gold-glow);
+}
+
+.nav-item.butt a {
+    color: #111 !important;
+    font-weight: 600;
+}
+
+/* ==========================================
+   3. CAROUSEL & HERO TYPOGRAPHY
+   ========================================== */
+.carousel {
+    position: relative;
+    margin-top: 30px;
+}
+
+.carousel-inner {
+    padding: 20px 0 50px 0;
+}
+
+.head h1 {
+    color: var(--text-light);
+    font-size: 65px;
+    font-weight: 700;
+    font-family: var(--font-script);
+    line-height: 1.1;
+    margin-bottom: 15px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.text > p {
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+/* Main Hero Button */
+.butt2 { 
+    padding: 14px 32px;
+    border-radius: 40px;
+    text-align: center;
+    color: #111;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    background-color: var(--gold-primary);
+    box-shadow: 0 6px 20px var(--gold-glow);
+    transition: var(--transition);
+    font-family: var(--font-sans);
+    cursor: pointer;
+}
+
+.butt2:hover {
+    background: var(--gold-hover);
+    color: #111;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px var(--gold-glow);
+}
+
+/* Custom Slide Indicators */
+.custom-controls {
+    position: absolute;
+    bottom: -10px;
+    left: 0px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    align-items: center;
+}
+
+.custom-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.custom-btn.active,
+.custom-btn:hover {
+    background-color: var(--gold-primary);
+    width: 32px;
+    border-radius: 8px;
+}
+
+/* ==========================================
+   4. PROMO BANNERS (PART 2 - TASTY THURSDAY)
+   ========================================== */
+.part2 {
+    padding: 70px 15px;
+    background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
+}
+
+.cd .c1 {
+    color: var(--text-light);
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    transition: var(--transition);
+}
+
+.cd .c1:hover {
+    transform: translateY(-6px);
+    border-color: rgba(243, 175, 61, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.left img {
+    width: 170px;
+    height: 170px;
+    object-fit: cover;
+    border: 4px solid var(--gold-primary);
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: var(--transition);
+}
+
+.cd .c1:hover .left img {
+    transform: scale(1.05);
+}
+
+.right {
+    padding: 10px;
+    font-family: var(--font-script);
+}
+
+.right h2 {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.right h3 span {
+    color: var(--gold-primary);
+    font-size: 38px;
+    font-weight: 700;
+}
+
+.right h3 span sub {
+    font-size: 18px;
+    font-family: var(--font-sans);
+    font-weight: 400;
+}
+
+.right .butt2 {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 15px;
+}
+
+/* ==========================================
+   5. MENU SECTION (PART 3)
+   ========================================== */
+.part3 {
+    padding: 70px 15px;
+    background: var(--bg-deep);
+}
+
+.part3 h1 {
+    font-size: 52px;
+    font-weight: 700;
+    font-family: var(--font-script);
+    color: var(--text-light);
+    margin-bottom: 30px;
+}
+
+.food-type {
+    background: var(--bg-surface);
+    padding: 8px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.food-type .all,
+.food-type div {
+    padding: 10px 0px;
+    border-radius: 40px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.food-type .all,
+.food-type div:hover,
+.food-type div.active {
+    background: var(--gold-primary);
+    color: #111;
+    font-weight: 600;
+    box-shadow: 0 4px 15px var(--gold-glow);
+}
+
+/* Dynamic Menu Card Styling (Appended via JS) */
+.crd {
+    width: 320px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    background: var(--bg-card);
+    transition: var(--transition);
+}
+
+.crd:hover {
+    transform: translateY(-8px);
+    border-color: rgba(243, 175, 61, 0.4);
+    box-shadow: 0 15px 35px rgba(243, 175, 61, 0.1);
+}
+
+.crd .image {
+    padding: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #171922;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+}
+
+.crd .image img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.crd:hover .image img {
+    transform: scale(1.1);
+}
+
+.cd-content {
+    padding: 25px;
+    background: var(--bg-card);
+    color: var(--text-light);
+}
+
+.cart {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    background: var(--gold-primary);
+    color: #111;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.cart:hover {
+    background: var(--gold-hover);
+}
+
+#view_Btn {
+    margin-top: 40px;
+    display: block;
+    max-width: 220px;
+}
+
+/* ==========================================
+   6. ABOUT SECTION (PART 4)
+   ========================================== */
+.part4 {
+    padding: 80px 15px;
+    background: var(--bg-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.about img {
+    width: 100%;
+    max-width: 440px;
+    height: 520px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.about .about_text {
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.about_text h1 {
+    font-family: var(--font-script);
+    font-size: 52px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+
+.about_text p {
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 30px;
+}
+
+#butt2 {
+    padding: 12px 28px;
+    font-size: 16px;
+    color: #111;
+    border: none;
+    border-radius: 30px;
+    background: var(--gold-primary);
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--gold-glow);
+    transition: var(--transition);
+}
+
+#butt2:hover {
+    background: var(--gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--gold-glow);
+}
+
+/* ==========================================
+   7. BOOK A TABLE & MAP (PART 5)
+   ========================================== */
+.part5 {
+    padding: 80px 15px;
+    background: var(--bg-deep);
+}
+
+.tb h1 {
+    font-family: var(--font-script);
+    font-size: 48px;
+    color: var(--text-light);
+    margin-bottom: 25px;
+}
+
+.tb input,
+.tb select {
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: var(--bg-surface);
+    color: var(--text-light);
+    font-size: 15px;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.tb input::placeholder {
+    color: var(--text-muted);
+}
+
+.tb input:focus,
+.tb select:focus {
+    outline: none;
+    border-color: var(--gold-primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.tb select option {
+    background: var(--bg-surface);
+    color: var(--text-light);
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.map iframe {
+    width: 100%;
+    height: 380px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.readMore {
+    margin-top: 5px;
+    margin-bottom: 20px;
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 30px;
+    color: #111;
+    background: var(--gold-primary);
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--gold-glow);
+    transition: var(--transition);
+}
+
+.readMore:hover {
+    background: var(--gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--gold-glow);
+}
+
+/* ==========================================
+   8. FOOTER
+   ========================================== */
+.footer {
+    padding: 70px 15px 30px 15px;
+    color: var(--text-light);
+    background: #060709;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer h2 {
+    font-family: var(--font-script);
+    font-size: 36px;
+    color: var(--text-light);
+    margin-bottom: 15px;
+}
+
+.footer h1 {
+    font-family: var(--font-script);
+    font-size: 42px;
+    color: var(--gold-primary);
+    margin-bottom: 10px;
+}
+
+.footer p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.icon-down .face {
+    padding: 10px;
+    margin: 0 6px;
+    font-size: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: var(--text-light);
+    background: var(--bg-surface);
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.icon-down .face:hover {
+    color: #111;
+    background: var(--gold-primary);
+    border-color: var(--gold-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.contact p span {
+    transition: var(--transition);
+}
+
+.contact p span:hover {
+    cursor: pointer;
+    color: var(--gold-primary);
+}
+
+/* ==========================================
+   9. RESPONSIVE MEDIA QUERIES
+   ========================================== */
+@media (max-width: 768px) {
+    .about .about_text {
+        padding-left: 0;
+        padding-top: 30px;
+        text-align: center;
+        align-items: center;
+    }
+    .head h1 {
+        font-size: 48px;
+    }
+}
+/* ==========================================
+   10. REACT ADDITIONS
+   ========================================== */
+/* Current page highlight in the navbar (React Router adds .active) */
+.nav-item a.nav-link.active {
+    color: var(--gold-primary) !important;
+}

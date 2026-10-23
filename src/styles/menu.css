@@ -1,0 +1,20 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.menu_nav{
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.menu-cont{
+    background: url(../assets/img/hero-bg.jpg);
+}
+
+/* Menu page: dark hover on the category pills (was #chicken:hover, #pizza:hover, ...) */
+.menu-page .food-type div:not(.active):hover{
+    cursor: pointer;
+    color: #ffffff;
+    background: rgb(22, 22, 35);
+    box-shadow: none;
+    transition: 0.4s;
+}

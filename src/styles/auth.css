@@ -1,0 +1,66 @@
+/* Sign in / Sign up / Profile pages.
+   These rules used to be global in signup.css + signin.css; they are now scoped
+   under .auth-page so they don't leak into the rest of the single-page app. */
+
+.auth-page .row{
+    font-size: 20px;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+}
+.auth-page .name div input{
+    margin-top: 10px;
+    margin-left: 20px;
+    padding: 8px 20px;
+    border: 2px solid rgb(0, 3, 52);
+    border-radius: 12px;
+}
+.auth-page .mail input{
+    margin-top: 10px;
+    margin-left: 25px;
+    padding: 8px 20px;
+    border: 2px solid rgb(0, 3, 52);
+    border-radius: 12px;
+}
+@media (min-width:425px) {
+    .auth-page .mail input{
+        margin-left: 60px;
+    }
+}
+@media (min-width:767px) {
+    .auth-page .mail input{
+        margin-left: 27px;
+    }
+}
+@media (min-width:1024px) {
+    .auth-page .mail input{
+        margin-left: 60px;
+    }
+}
+.auth-page .pass input{
+    margin-top: 10px;
+    margin-left: 30px;
+    padding: 8px 20px;
+    border: 2px solid rgb(0, 3, 52);
+    border-radius: 12px;
+}
+.auth-page .number div input{
+    margin-top: 10px;
+    margin-left: 30px;
+    padding: 8px 20px;
+    border: 2px solid rgb(0, 3, 52);
+    border-radius: 12px;
+}
+/* Only the form buttons (Sign In / Create Account), not the navbar toggler etc. */
+.auth-page .form button{
+    text-align: center;
+    padding: 8px 25px;
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 18px;
+    border: none;
+    background-color: #ffce63;
+}
+.auth-page .form button:hover{
+    background: #e8a920;
+}
