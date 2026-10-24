@@ -1,85 +1,80 @@
-import { useCallback, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { client } from '../lib/supabase.js'
-import LoginModal from './LoginModal.jsx'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useCart } from '../context/CartContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
+import { useOrderOnline } from '../hooks/useOrderOnline.js'
+
+const LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/menu', label: 'Menu' },
+  { to: '/about', label: 'About' },
+  { to: '/book', label: 'Book Table' },
+]
 
 export default function Navbar() {
-  const navigate = useNavigate()
-  const [showLogin, setShowLogin] = useState(false)
-  const closeLogin = useCallback(() => setShowLogin(false), [])
+  const { count } = useCart()
+  const { user } = useAuth()
+  const orderOnline = useOrderOnline()
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-  // "Order Online": go to the menu if signed in, otherwise ask the user to log in.
-  async function handleOrderOnline(e) {
-    e.preventDefault()
-    if (!client) {
-      setShowLogin(true)
-      return
-    }
-    const { data } = await client.auth.getSession()
-    if (data.session) {
-      navigate('/menu')
-    } else {
-      setShowLogin(true)
-    }
-  }
+  // close the mobile menu after navigating
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const initial = (user?.user_metadata?.first_name || user?.email || '').charAt(0).toUpperCase()
 
   return (
-    <>
-      <nav className="navbar navbar-expand-lg pt-0 pb-0">
-        <div className="container-fluid">
-          <Link className="navbar-brand" to="/">
-            <h1 style={{ color: '#ffffff' }}>Feane</h1>
+    <header className={`site-nav${scrolled ? ' scrolled' : ''}`}>
+      <div className="container">
+        <div className="bar">
+          <Link className="brand" to="/" aria-label="Feane home">
+            Feane<span>.</span>
           </Link>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target=".navbar-collapse"
-            aria-controls="navbarNav navbarIcons"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
 
-          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <abbr title="Home"><NavLink className="nav-link" to="/" end>Home</NavLink></abbr>
-              </li>
-              <li className="nav-item">
-                <abbr title="Menu"><NavLink className="nav-link" to="/menu">Menu</NavLink></abbr>
-              </li>
-              <li className="nav-item">
-                <abbr title="About"><NavLink className="nav-link" to="/about">About</NavLink></abbr>
-              </li>
-              <li className="nav-item">
-                <abbr title="BookTable"><NavLink className="nav-link" to="/book">BookTable</NavLink></abbr>
-              </li>
+          <div className={`nav-panel${open ? ' open' : ''}`} id="nav-panel">
+            <ul className="nav-links">
+              {LINKS.map((l) => (
+                <li key={l.to}>
+                  <NavLink to={l.to} end={l.end}>{l.label}</NavLink>
+                </li>
+              ))}
             </ul>
+            <button type="button" className="pbtn pbtn-gold pbtn-sm" onClick={orderOnline}>
+              Order Online <i className="fa-solid fa-arrow-right" />
+            </button>
           </div>
 
-          <div className="collapse navbar-collapse justify-content-end" id="navbarIcons">
-            <ul className="navbar-nav">
-              <li className="nav-item icon">
-                <NavLink className="nav-link" to="/profile" aria-label="Profile">
-                  <i className="fa-solid fa-user" />
-                </NavLink>
-              </li>
-              <li className="nav-item icon">
-                <Link className="nav-link" to="/" aria-label="Cart">
-                  <i className="fa-solid fa-cart-shopping" />
-                </Link>
-              </li>
-              <li className="nav-item butt">
-                <a className="nav-link order" href="/menu" onClick={handleOrderOnline}>Order Online</a>
-              </li>
-            </ul>
+          <div className="nav-actions">
+            <Link to="/cart" className="icon-btn" aria-label={`Cart, ${count} items`}>
+              <i className="fa-solid fa-bag-shopping" />
+              {count > 0 && <span className="cart-badge">{count > 99 ? '99+' : count}</span>}
+            </Link>
+            <Link to="/profile" className="icon-btn" aria-label="Profile">
+              {user ? <span className="nav-initial">{initial}</span> : <i className="fa-regular fa-user" />}
+            </Link>
+            <button
+              type="button"
+              className="icon-btn nav-toggle"
+              aria-label="Toggle menu"
+              aria-expanded={open}
+              aria-controls="nav-panel"
+              onClick={() => setOpen((o) => !o)}
+            >
+              <i className={`fa-solid ${open ? 'fa-xmark' : 'fa-bars'}`} />
+            </button>
           </div>
         </div>
-      </nav>
-
-      <LoginModal show={showLogin} onClose={closeLogin} />
-    </>
+      </div>
+    </header>
   )
 }

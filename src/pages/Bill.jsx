@@ -1,179 +1,195 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import PageHero from '../components/PageHero.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
+import { useCart } from '../context/CartContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import { calcTotals, lineTotal, money, unitPrice } from '../lib/pricing.js'
+import { addOrder, clearCheckout, getCheckout } from '../lib/storage.js'
+import { isPhone } from '../lib/validate.js'
 
-const TAX_RATE = 0.05
-const DELIVERY_FEE = 3.5
-const EXTRA_CHEESE_COST = 3.0
-const GOLD = 'var(--gold-primary, #f3af3d)'
+const PAYMENTS = [
+  { value: 'cod', label: 'Cash on delivery', icon: 'fa-money-bill-wave' },
+  { value: 'card', label: 'Credit / debit card', icon: 'fa-credit-card' },
+  { value: 'wallet', label: 'Online wallet', icon: 'fa-wallet' },
+]
 
-// The order is saved by the product page in localStorage under "orders".
-function readOrder() {
-  try {
-    const saved = localStorage.getItem('orders')
-    return saved ? JSON.parse(saved) : null
-  } catch {
-    return null
-  }
+// What are we checking out? The "Order now" item(s), or – failing that – the whole cart.
+function useCheckoutItems(cartItems) {
+  const [saved] = useState(getCheckout)
+  if (saved?.items?.length) return { items: saved.items, fromCart: Boolean(saved.fromCart) }
+  return { items: cartItems, fromCart: true }
 }
 
-const money = (n) => `$${n.toFixed(2)}`
-
 export default function Bill() {
-  const navigate = useNavigate()
-  const [order] = useState(readOrder)
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
+  const toast = useToast()
+  const { user } = useAuth()
+  const { items: cartItems, clear: clearCart } = useCart()
+  const { items, fromCart } = useCheckoutItems(cartItems)
+  const totals = calcTotals(items)
 
-  let unitPrice = 0
-  let subtotal = 0
-  let tax = 0
-  let total = 0
+  const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '', payment: 'cod' })
+  const [errors, setErrors] = useState({})
+  const [placed, setPlaced] = useState(null)
 
-  if (order) {
-    const basePrice = parseFloat(order.price) || 0
-    const extraCost = order.option && order.option.includes('Extra Cheese') ? EXTRA_CHEESE_COST : 0
-    unitPrice = basePrice + extraCost
-    subtotal = unitPrice * order.quantity
-    tax = subtotal * TAX_RATE
-    total = subtotal + tax + DELIVERY_FEE
+  // prefill the name for signed-in customers
+  useEffect(() => {
+    const first = user?.user_metadata?.first_name
+    if (first) setForm((f) => (f.name ? f : { ...f, name: first }))
+  }, [user])
+
+  const set = (field) => (e) => {
+    setForm((f) => ({ ...f, [field]: e.target.value }))
+    if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }))
   }
 
-  function handleConfirm() {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      alert('Please fill in all delivery details before confirming your order.')
-      return
+  function handleConfirm(e) {
+    e.preventDefault()
+    const found = {}
+    if (form.name.trim().length < 2) found.name = 'Please enter your full name'
+    if (!isPhone(form.phone)) found.phone = 'Enter a valid phone number'
+    if (form.address.trim().length < 5) found.address = 'Please enter your full delivery address'
+    setErrors(found)
+    if (Object.keys(found).length) return
+
+    const order = {
+      id: `FN-${Date.now().toString(36).toUpperCase()}`,
+      date: new Date().toISOString(),
+      items,
+      totals,
+      customer: { name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim() },
+      payment: form.payment,
     }
-    alert(`Thank you, ${name.trim()}! Your order for ${order.name} has been successfully placed and will be delivered soon.`)
-    localStorage.removeItem('orders')
-    navigate('/')
+    addOrder(order)
+    if (fromCart) clearCart()
+    clearCheckout()
+    setPlaced(order)
+    toast.success('Order placed successfully!')
+    window.scrollTo(0, 0)
+  }
+
+  // ---- success screen ----
+  if (placed) {
+    return (
+      <>
+        <PageHero title="Order confirmed" crumbs={[{ label: 'Checkout' }]} />
+        <section className="section section-tight">
+          <div className="container">
+            <div className="state-card state-card-lg success">
+              <i className="fa-solid fa-circle-check" />
+              <h3>Thank you, {placed.customer.name}!</h3>
+              <p>
+                Your order <strong>{placed.id}</strong> has been placed and will be on its way soon.
+                You'll pay <strong>{money(placed.totals.total)}</strong> ({PAYMENTS.find((p) => p.value === placed.payment)?.label.toLowerCase()}).
+              </p>
+              <div className="center-row">
+                <Link to="/profile" className="pbtn pbtn-ghost">View my orders</Link>
+                <Link to="/menu" className="pbtn pbtn-gold">Order something else</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  // ---- nothing to check out ----
+  if (items.length === 0) {
+    return (
+      <>
+        <PageHero title="Checkout" crumbs={[{ label: 'Checkout' }]} />
+        <section className="section section-tight">
+          <div className="container">
+            <div className="state-card state-card-lg">
+              <i className="fa-solid fa-receipt" />
+              <h3>No active order found</h3>
+              <p>Please pick a dish first, then come back to check out.</p>
+              <Link to="/menu" className="pbtn pbtn-gold">Browse the menu <i className="fa-solid fa-arrow-right" /></Link>
+            </div>
+          </div>
+        </section>
+      </>
+    )
   }
 
   return (
-    <div className="bill-page bg-dark text-light min-vh-100">
-      <div className="container py-5">
-        {/* Header */}
-        <div className="text-center mb-5">
-          <h1 className="fw-bold" style={{ color: GOLD }}>Order Invoice</h1>
-          <p className="text-muted">Review your items and complete your secure checkout</p>
-        </div>
+    <>
+      <PageHero
+        title="Checkout"
+        subtitle="Review your items and complete your order."
+        crumbs={[{ label: 'Cart', to: '/cart' }, { label: 'Checkout' }]}
+      />
 
-        <div className="row g-5">
-          {/* Billing details / customer form */}
-          <div className="col-lg-7">
-            <div className="card p-4 rounded-4 shadow-lg border-secondary bg-black">
-              <h4 className="mb-4 text-light"><i className="fa-solid fa-user-shield me-2" />Delivery Information</h4>
-              <form id="checkout-form" onSubmit={(e) => e.preventDefault()}>
-                <div className="mb-3">
-                  <label className="form-label text-muted" htmlFor="cust-name">Full Name</label>
-                  <input
-                    type="text"
-                    id="cust-name"
-                    className="form-control bg-dark text-light border-secondary"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+      <section className="section section-tight">
+        <div className="container">
+          <form className="checkout-layout" onSubmit={handleConfirm} noValidate>
+            <div className="surface-card">
+              <h3 className="card-title"><i className="fa-solid fa-truck-fast" /> Delivery information</h3>
+
+              <div className="form-grid">
+                <div className="field">
+                  <label htmlFor="cust-name">Full name</label>
+                  <input id="cust-name" className="input" type="text" placeholder="John Doe" value={form.name} onChange={set('name')} aria-invalid={Boolean(errors.name)} />
+                  {errors.name && <small className="field-error">{errors.name}</small>}
                 </div>
-                <div className="mb-3">
-                  <label className="form-label text-muted" htmlFor="cust-phone">Phone Number</label>
-                  <input
-                    type="tel"
-                    id="cust-phone"
-                    className="form-control bg-dark text-light border-secondary"
-                    placeholder="+1 (234) 567-890"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
+                <div className="field">
+                  <label htmlFor="cust-phone">Phone number</label>
+                  <input id="cust-phone" className="input" type="tel" placeholder="+92 300 1234567" value={form.phone} onChange={set('phone')} aria-invalid={Boolean(errors.phone)} />
+                  {errors.phone && <small className="field-error">{errors.phone}</small>}
                 </div>
-                <div className="mb-3">
-                  <label className="form-label text-muted" htmlFor="cust-address">Delivery Address</label>
-                  <textarea
-                    id="cust-address"
-                    className="form-control bg-dark text-light border-secondary"
-                    rows="3"
-                    placeholder="Street, City, Apartment, etc."
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    required
-                  />
+                <div className="field full">
+                  <label htmlFor="cust-address">Delivery address</label>
+                  <textarea id="cust-address" className="input" rows="3" placeholder="Street, area, city…" value={form.address} onChange={set('address')} aria-invalid={Boolean(errors.address)} />
+                  {errors.address && <small className="field-error">{errors.address}</small>}
                 </div>
-                <div className="mb-3">
-                  <label className="form-label text-muted" htmlFor="cust-payment">Payment Method</label>
-                  <select id="cust-payment" className="form-select bg-dark text-light border-secondary" defaultValue="cod">
-                    <option value="cod">Cash on Delivery (COD)</option>
-                    <option value="card">Credit / Debit Card</option>
-                    <option value="wallet">Online Wallet</option>
-                  </select>
+                <div className="field full">
+                  <label htmlFor="cust-notes">Order notes <span className="optional">(optional)</span></label>
+                  <input id="cust-notes" className="input" type="text" placeholder="e.g. ring the bell twice" value={form.notes} onChange={set('notes')} />
                 </div>
-              </form>
+              </div>
+
+              <h3 className="card-title"><i className="fa-solid fa-wallet" /> Payment method</h3>
+              <div className="pay-options">
+                {PAYMENTS.map((p) => (
+                  <label key={p.value} className={`option-card${form.payment === p.value ? ' selected' : ''}`}>
+                    <input type="radio" name="payment" value={p.value} checked={form.payment === p.value} onChange={set('payment')} />
+                    <i className={`fa-solid ${p.icon}`} />
+                    <span className="option-name">{p.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Order summary / bill receipt */}
-          <div className="col-lg-5">
-            <div className="card p-4 rounded-4 shadow-lg border-secondary bg-black">
-              <h4 className="mb-4 text-light"><i className="fa-solid fa-receipt me-2" />Order Summary</h4>
+            <aside className="summary-card">
+              <h3>Order summary</h3>
 
-              <div id="bill-items-container" className="border-bottom border-secondary pb-3 mb-3">
-                {order ? (
-                  <div className="d-flex align-items-center gap-3">
-                    <img
-                      src={order.image}
-                      alt={order.name}
-                      className="rounded-3"
-                      style={{ width: 60, height: 60, objectFit: 'contain', background: '#1a1a1a' }}
-                    />
-                    <div className="flex-grow-1">
-                      <h6 className="mb-1 text-light fw-bold">{order.name}</h6>
-                      <small className="text-muted d-block">Option: {order.option}</small>
-                      <small className="text-muted">Qty: {order.quantity} × {money(unitPrice)}</small>
+              <div className="bill-items">
+                {items.map((item, i) => (
+                  <div className="bill-item" key={item.key || `${item.id}-${i}`}>
+                    <img src={item.image} alt={item.name} />
+                    <div>
+                      <h4>{item.name}</h4>
+                      <p>{item.option === 'Standard' ? 'Standard portion' : item.option}</p>
+                      <p>Qty {item.quantity} × {money(unitPrice(item))}</p>
                     </div>
-                    <span className="fw-bold text-light">{money(subtotal)}</span>
+                    <strong>{money(lineTotal(item))}</strong>
                   </div>
-                ) : (
-                  <p className="text-muted text-center mb-0">
-                    No active order found. Please select a recipe first.
-                  </p>
-                )}
+                ))}
               </div>
 
-              <div className="d-flex justify-content-between mb-2 text-muted">
-                <span>Subtotal</span>
-                <span id="bill-subtotal">{money(subtotal)}</span>
-              </div>
-              <div className="d-flex justify-content-between mb-2 text-muted">
-                <span>Estimated Tax (5%)</span>
-                <span id="bill-tax">{money(tax)}</span>
-              </div>
-              <div className="d-flex justify-content-between mb-3 text-muted">
-                <span>Delivery Fee</span>
-                <span id="bill-delivery">{money(DELIVERY_FEE)}</span>
-              </div>
+              <div className="sum-row"><span>Subtotal</span><span>{money(totals.subtotal)}</span></div>
+              <div className="sum-row"><span>Estimated tax (5%)</span><span>{money(totals.tax)}</span></div>
+              <div className="sum-row"><span>Delivery fee</span><span>{money(totals.delivery)}</span></div>
+              <div className="sum-total"><span>Total</span><span>{money(totals.total)}</span></div>
 
-              <hr className="border-secondary" />
-
-              <div className="d-flex justify-content-between mb-4 fs-5 fw-bold">
-                <span>Total Amount</span>
-                <span id="bill-total" style={{ color: GOLD }}>{money(total)}</span>
-              </div>
-
-              <button
-                type="button"
-                id="confirm-order-btn"
-                className="btn w-100 py-3 fw-bold text-dark"
-                style={{ background: GOLD, border: 'none', cursor: 'pointer' }}
-                onClick={handleConfirm}
-                disabled={!order}
-              >
-                Confirm &amp; Place Order
+              <button type="submit" className="pbtn pbtn-gold pbtn-block">
+                Confirm &amp; place order <i className="fa-solid fa-check" />
               </button>
-            </div>
-          </div>
+              {fromCart && <Link to="/cart" className="link-muted center">← Edit cart</Link>}
+            </aside>
+          </form>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   )
 }

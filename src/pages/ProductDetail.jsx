@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import Navbar from '../components/Navbar.jsx'
-import Footer from '../components/Footer.jsx'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import PageHero from '../components/PageHero.jsx'
+import QtyStepper from '../components/QtyStepper.jsx'
+import Stars from '../components/Stars.jsx'
+import { useCart, cartKey } from '../context/CartContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import { OPTIONS, getPrice, money, optionExtra } from '../lib/pricing.js'
+import { setCheckout } from '../lib/storage.js'
 
 const BASE_URL = 'https://dummyjson.com/recipes'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
+  const { addItem } = useCart()
 
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -20,10 +27,12 @@ export default function ProductDetail() {
     setLoading(true)
     setError('')
     setRecipe(null)
+    setQuantity(1)
+    setOption('Standard')
 
     fetch(`${BASE_URL}/${id}`)
       .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch recipe details')
+        if (!res.ok) throw new Error(res.status === 404 ? 'This dish could not be found.' : 'Failed to load this dish.')
         return res.json()
       })
       .then((data) => {
@@ -41,166 +50,142 @@ export default function ProductDetail() {
     }
   }, [id])
 
-  // The recipe API has no price, so (like before) it is derived from calories.
-  const price = recipe ? parseFloat((recipe.caloriesPerServing / 35).toFixed(2)) : 0
+  const price = recipe ? getPrice(recipe) : 0
+  const unit = price + optionExtra(option)
+  const total = unit * quantity
 
-  function buildItem() {
-    return {
-      id,
-      name: recipe.name,
-      price,
-      image: recipe.image,
-      quantity: Math.max(1, parseInt(quantity, 10) || 1),
-      option,
-    }
-  }
-
-  function handleOrder() {
-    if (!recipe) return
-    localStorage.setItem('orders', JSON.stringify(buildItem()))
-    navigate('/bill')
-  }
+  const buildItem = () => ({
+    id: recipe.id,
+    name: recipe.name,
+    image: recipe.image,
+    price,
+    option,
+    quantity,
+    key: cartKey(recipe.id, option),
+  })
 
   function handleAddToCart() {
-    if (!recipe) return
-    localStorage.setItem('saveProduct', JSON.stringify(buildItem()))
-    alert('Item added to cart successfully!')
+    addItem({ id: recipe.id, name: recipe.name, image: recipe.image, price, option }, quantity)
+    toast.success(`${quantity} × ${recipe.name} added to cart`)
+  }
+
+  function handleOrderNow() {
+    setCheckout([buildItem()], false)
+    navigate('/bill')
   }
 
   return (
     <>
-      <div className="part1" style={{ paddingBottom: 30 }}>
-        <div className="container">
-          <Navbar />
-        </div>
-      </div>
+      <PageHero
+        title={recipe ? recipe.name : 'Dish details'}
+        crumbs={[{ label: 'Menu', to: '/menu' }, { label: recipe ? recipe.name : 'Dish' }]}
+      />
 
-      <div className="part5" style={{ padding: '60px 0' }}>
-        <div className="container" id="product-details-container">
+      <section className="section section-tight">
+        <div className="container">
           {loading && (
-            <div className="text-center text-light py-5">
-              <div className="spinner-border text-warning" role="status">
-                <span className="visually-hidden">Loading...</span>
+            <div className="product-layout" aria-busy="true">
+              <div className="skeleton sk-product-media" />
+              <div>
+                <div className="skeleton sk-line" />
+                <div className="skeleton sk-line short" />
+                <div className="skeleton sk-line" />
+                <div className="skeleton sk-line short" />
               </div>
-              <p className="mt-3">Loading product details...</p>
             </div>
           )}
 
-          {error && <div className="alert alert-warning text-center">{error}</div>}
+          {error && (
+            <div className="state-card state-card-lg">
+              <i className="fa-solid fa-triangle-exclamation" />
+              <h3>{error}</h3>
+              <Link to="/menu" className="pbtn pbtn-gold">Back to menu</Link>
+            </div>
+          )}
 
           {recipe && (
-            <div className="row align-items-center g-5">
-              {/* Food image */}
-              <div className="col-12 col-lg-6 text-center">
-                <div
-                  className="p-4 rounded-4"
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    boxShadow: '0 15px 35px rgba(0,0,0,0.4)',
-                  }}
-                >
-                  <img
-                    src={recipe.image}
-                    className="img-fluid rounded-3"
-                    alt={recipe.name}
-                    style={{ maxHeight: 400, width: '100%', objectFit: 'contain', transition: 'transform 0.4s ease' }}
-                  />
+            <>
+              <div className="product-layout">
+                <div className="product-media">
+                  <img src={recipe.image} alt={recipe.name} />
+                </div>
+
+                <div className="product-info">
+                  <span className="dish-tag static">{recipe.cuisine} cuisine</span>
+                  <h2 className="product-title">{recipe.name}</h2>
+
+                  <div className="product-rating">
+                    <Stars value={recipe.rating} />
+                    <strong>{recipe.rating}</strong>
+                    <span>({recipe.reviewCount} reviews)</span>
+                  </div>
+
+                  <p className="product-price">{money(unit)} <small>per serving</small></p>
+
+                  <ul className="chips">
+                    <li><i className="fa-regular fa-clock" /> {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</li>
+                    <li><i className="fa-solid fa-users" /> Serves {recipe.servings}</li>
+                    <li><i className="fa-solid fa-fire-flame-curved" /> {recipe.caloriesPerServing} kcal</li>
+                    <li><i className="fa-solid fa-gauge-simple" /> {recipe.difficulty}</li>
+                  </ul>
+
+                  <p className="product-desc">
+                    A freshly prepared, authentic {recipe.cuisine} specialty featuring{' '}
+                    {recipe.ingredients.slice(0, 3).join(', ')} and more. Made to order and ready in about{' '}
+                    {recipe.prepTimeMinutes + recipe.cookTimeMinutes} minutes.
+                  </p>
+
+                  <fieldset className="option-group">
+                    <legend>Choose your option</legend>
+                    {OPTIONS.map((o) => (
+                      <label key={o.value} className={`option-card${option === o.value ? ' selected' : ''}`}>
+                        <input
+                          type="radio"
+                          name="food-option"
+                          value={o.value}
+                          checked={option === o.value}
+                          onChange={() => setOption(o.value)}
+                        />
+                        <span className="option-name">{o.label}</span>
+                        <span className="option-extra">{o.extra ? `+${money(o.extra)}` : 'Included'}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+
+                  <div className="buy-row">
+                    <QtyStepper value={quantity} onChange={setQuantity} />
+                    <span className="buy-total">Total <strong>{money(total)}</strong></span>
+                  </div>
+
+                  <div className="buy-actions">
+                    <button type="button" className="pbtn pbtn-ghost" onClick={handleAddToCart}>
+                      <i className="fa-solid fa-bag-shopping" /> Add to cart
+                    </button>
+                    <button type="button" className="pbtn pbtn-gold" onClick={handleOrderNow}>
+                      Order now <i className="fa-solid fa-arrow-right" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Details & ordering */}
-              <div className="col-12 col-lg-6 tb">
-                <span
-                  className="badge mb-2 px-3 py-2"
-                  style={{
-                    background: 'rgba(243, 175, 61, 0.15)',
-                    color: 'var(--gold-primary)',
-                    fontWeight: 600,
-                    borderRadius: 20,
-                  }}
-                >
-                  {recipe.cuisine} Cuisine
-                </span>
-
-                <h1 style={{ fontSize: 45, marginBottom: 15 }}>{recipe.name}</h1>
-
-                <div className="d-flex align-items-center gap-3 mb-3 flex-wrap">
-                  <h2 style={{ color: 'var(--gold-primary)', fontSize: 32, fontWeight: 700, margin: 0 }}>
-                    ${price.toFixed(2)}
-                  </h2>
-                  <div className="text-warning fs-6">
-                    <i className="fa-solid fa-star" />
-                    <span className="text-light fw-bold ms-1">{recipe.rating}</span>
-                    <span className="text-muted ms-2">({recipe.reviewCount} reviews)</span>
-                  </div>
+              <div className="detail-cards">
+                <div className="detail-card">
+                  <h3><i className="fa-solid fa-basket-shopping" /> Ingredients</h3>
+                  <ul className="ingredient-list">
+                    {recipe.ingredients.map((ing, i) => <li key={`${i}-${ing}`}>{ing}</li>)}
+                  </ul>
                 </div>
-
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: 25 }}>
-                  A freshly prepared, authentic {recipe.cuisine} specialty. Takes about{' '}
-                  {recipe.prepTimeMinutes + recipe.cookTimeMinutes} minutes to craft and serves {recipe.servings}{' '}
-                  people. Enjoy a delightful meal featuring {recipe.ingredients.slice(0, 3).join(', ')} and more!
-                </p>
-
-                <div className="mb-4">
-                  <label className="form-label text-light fw-semibold mb-2" htmlFor="food-option">
-                    Select Option
-                  </label>
-                  <select
-                    id="food-option"
-                    className="form-select bg-dark text-light border-secondary"
-                    value={option}
-                    onChange={(e) => setOption(e.target.value)}
-                  >
-                    <option value="Standard">Standard Portion ({recipe.caloriesPerServing} kcal)</option>
-                    <option value="Extra Cheese">Extra Cheese / Topping +$3.00</option>
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label text-light fw-semibold mb-2" htmlFor="food-quantity">
-                    Quantity
-                  </label>
-                  <div className="d-flex align-items-center gap-3" style={{ maxWidth: 160 }}>
-                    <input
-                      type="number"
-                      id="food-quantity"
-                      className="form-control text-center fw-bold bg-dark text-light border-secondary"
-                      value={quantity}
-                      min="1"
-                      max="10"
-                      onChange={(e) => setQuantity(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="butt2 text-center text-white py-3 px-4 btn border-0 w-100"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 18 }}
-                  >
-                    Add To Cart
-                  </button>
-                </div>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleOrder}
-                    className="butt2 text-center text-white py-3 px-4 btn border-0 w-100"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 18 }}
-                  >
-                    <i className="fa-solid fa-bag-shopping me-2" /> Order Now
-                  </button>
+                <div className="detail-card">
+                  <h3><i className="fa-solid fa-list-ol" /> How it's made</h3>
+                  <ol className="step-list">
+                    {recipe.instructions.map((step, i) => <li key={`${i}-${step.slice(0, 12)}`}>{step}</li>)}
+                  </ol>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
-      </div>
-
-      <Footer />
+      </section>
     </>
   )
 }

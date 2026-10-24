@@ -1,7 +1,6 @@
 # Feane – React + Vite + Bootstrap
 
-The original multi-page HTML/CSS/JS site, converted into a single-page React app built with Vite.
-Bootstrap 5 and Font Awesome now come from npm (no CDN links).
+Premium dark-and-gold restaurant site: React 19, Vite, Bootstrap 5, React Router, Supabase auth.
 
 ## Run it
 
@@ -9,63 +8,44 @@ Requires Node 20.19+ (or 22.12+).
 
 ```bash
 npm install
-cp .env.example .env     # then fill in your Supabase values (see below)
-npm run dev              # http://localhost:5173
-npm run build            # production build in dist/
-npm run preview          # serve the production build locally
+npm run dev        # http://localhost:5173
+npm run build      # production build in dist/
+npm run preview    # serve the production build
 ```
 
 ## Supabase
 
-Your old `supabase.js` was not included in the conversion. The app reads your credentials from `.env`:
+Open `src/lib/supabase.js` and paste your project URL and anon key
+(or put `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in a `.env` file – see `.env.example`).
+Without them the site still works; sign in / sign up / profile show a "not configured" message.
 
-```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
+Table used: `user_food` (`uid`, `firstName`, `lastName`, `email`, `number`, `address`, `created_at`).
+The password is never stored in it – Supabase Auth keeps it.
 
-`src/lib/supabase.js` creates the `client` from those values. `.env` is git-ignored.
-Until it is filled in, the site still works; the sign in / sign up / profile pages show a
-"Supabase is not configured" message instead of crashing.
+## Pages
 
-## Pages (routes)
-
-| Old file              | Route           | React file                    |
-| --------------------- | --------------- | ----------------------------- |
-| `index.html`          | `/`             | `src/pages/Home.jsx`          |
-| `menu.html`           | `/menu`         | `src/pages/Menu.jsx`          |
-| `about.html`          | `/about`        | `src/pages/About.jsx`         |
-| `book.html`           | `/book`         | `src/pages/Book.jsx`          |
-| `signin.html`         | `/signin`       | `src/pages/SignIn.jsx`        |
-| `signup.html`         | `/signup`       | `src/pages/SignUp.jsx`        |
-| `profile.html`        | `/profile`      | `src/pages/Profile.jsx`       |
-| `product-detail.html` | `/product/:id`  | `src/pages/ProductDetail.jsx` |
-| `bill.html`           | `/bill`         | `src/pages/Bill.jsx`          |
+| Route          | Page                                                        |
+| -------------- | ----------------------------------------------------------- |
+| `/`            | Home: hero, offers, popular dishes, features, about, booking |
+| `/menu`        | Menu with category tabs, search and sorting                 |
+| `/product/:id` | Dish page: portion option, quantity, add to cart / order now |
+| `/cart`        | **Cart**: change quantities, remove items, totals, checkout |
+| `/bill`        | Checkout with validation, payment choice, order confirmation |
+| `/profile`     | **Profile**: account details (editable), order + booking history |
+| `/signin` `/signup` | Auth pages with validation and show/hide password      |
+| `/about` `/book` | About and table booking (saved to your profile history)    |
 
 ## Structure
 
 ```
 src/
-  main.jsx            entry: imports CSS + Bootstrap JS, mounts <App/>
-  App.jsx             routes
-  components/         Navbar, PageHeader, Footer, HeroCarousel, MenuSection,
-                      RecipeCard, AboutSection, BookTable, LoginModal
-  pages/              one file per page (table above)
-  hooks/useRecipes.js shared dummyjson.com fetch
-  lib/supabase.js     Supabase client (from .env)
-  styles/             style.css, menu.css, auth.css, bill.css
-  assets/img/         images
+  main.jsx, App.jsx        entry + routes (all pages share Layout: navbar + footer)
+  context/                 AuthContext, CartContext (saved in localStorage), ToastContext
+  components/              Navbar, Footer, PageHero, HeroCarousel, MenuSection, RecipeCard,
+                           QtyStepper, BookTable, LoginModal, Reveal, ...
+  pages/                   one file per route
+  lib/                     supabase, pricing, storage, validate
+  hooks/                   useRecipes, useOrderOnline
+  styles/base.css          theme tokens, navbar, buttons, forms, toasts, modal
+  styles/pages.css         page/section styles
 ```
-
-## What changed vs. the HTML version
-
-- Page-specific CSS that used to be global (`bill.css`, `signup.css`, `signin.css`) is scoped
-  (`.bill-page`, `.auth-page`) so it can't leak onto other pages.
-- The current page is highlighted in the navbar (the old `about.js`/`menu.js` tried to do this).
-- Home and Menu share one `MenuSection`. The category tabs (All / Chicken / Pizza / Pasta / Cookies)
-  use a single active state and work on both pages. Dish cards on both pages link to the product page.
-- **Sign up no longer saves the password in the `user_food` table** (Supabase Auth already stores it
-  securely). It also now stops and shows the error if sign-up or the insert fails.
-  If your `user_food.password` column is `NOT NULL`, make it nullable or drop it.
-- Sign in shows errors on the page and redirects to the home page on success.
-- User-supplied text is rendered by React, which escapes it (the old `innerHTML` code did not).

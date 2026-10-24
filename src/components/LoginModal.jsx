@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 
-// Bootstrap modal markup/classes, driven by React state instead of data attributes.
+// "Please sign in" prompt, shown when a guest tries to order.
 export default function LoginModal({ show, onClose }) {
   useEffect(() => {
     if (!show) return undefined
@@ -20,31 +20,26 @@ export default function LoginModal({ show, onClose }) {
   if (!show) return null
 
   return createPortal(
-    <>
+    <div className="px-backdrop" onClick={onClose}>
       <div
-        className="modal fade show d-block"
-        tabIndex={-1}
+        className="px-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="loginModalTitle"
-        onClick={onClose}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="loginModalTitle">Login Required</h5>
-              <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
-            </div>
-
-            <div className="modal-body text-center">
-              <Link to="/signin" className="btn btn-primary me-2">Login</Link>
-              <Link to="/signup" className="btn btn-success">Signup</Link>
-            </div>
-          </div>
+        <button type="button" className="px-modal-close" aria-label="Close" onClick={onClose}>
+          <i className="fa-solid fa-xmark" />
+        </button>
+        <div className="px-modal-icon"><i className="fa-solid fa-lock" /></div>
+        <h3 id="loginModalTitle">Sign in to order</h3>
+        <p>Create a free account or log in to start ordering your favourite dishes.</p>
+        <div className="px-modal-actions">
+          <Link to="/signin" className="pbtn pbtn-gold" onClick={onClose}>Login</Link>
+          <Link to="/signup" className="pbtn pbtn-ghost" onClick={onClose}>Sign up</Link>
         </div>
       </div>
-      <div className="modal-backdrop fade show" />
-    </>,
+    </div>,
     document.body,
   )
 }

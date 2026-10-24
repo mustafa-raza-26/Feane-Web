@@ -1,21 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Carousel } from 'bootstrap'
+import { useOrderOnline } from '../hooks/useOrderOnline.js'
 
-const SLIDES = [0, 1, 2].map((i) => ({
-  id: i,
-  title: 'Fast Food Restaurant',
-  text: 'Doloremque, itaque aperiam facilis rerum, commodi, temporibus sapiente ad mollitia laborum quam quisquam esse error unde. Tempora ex doloremque, labore, sunt repellat dolore, iste magni quos nihil ducimus libero ipsam.',
-}))
+const SLIDES = [
+  {
+    eyebrow: 'Fast Food Restaurant',
+    title: ['Big flavour,', 'served fast'],
+    text: 'Burgers, pizza, pasta and more — made fresh to order and delivered hot to your door.',
+  },
+  {
+    eyebrow: 'Fresh every order',
+    title: ['Crafted with', 'fresh ingredients'],
+    text: 'Every dish is prepared when you order it. Never reheated, never rushed — just great taste.',
+  },
+  {
+    eyebrow: 'Pizza · Burgers · Pasta',
+    title: ['Your favourites,', 'one tap away'],
+    text: 'Browse the full menu, add to cart and check out in under a minute. Cash on delivery available.',
+  },
+]
 
 export default function HeroCarousel() {
   const ref = useRef(null)
   const [active, setActive] = useState(0)
+  const orderOnline = useOrderOnline()
 
   useEffect(() => {
     const el = ref.current
-    // Bootstrap's own carousel (auto-slides every 2s), same options as the old data-bs-* attributes.
-    const carousel = new Carousel(el, { interval: 2000, ride: 'carousel' })
-    // Keep our custom indicator dots in sync with the slide.
+    // Bootstrap's carousel: auto-slides every 4s, pauses on hover.
+    const carousel = new Carousel(el, { interval: 4000, ride: 'carousel' })
     const onSlide = (e) => setActive(e.to)
     el.addEventListener('slide.bs.carousel', onSlide)
     return () => {
@@ -25,25 +39,35 @@ export default function HeroCarousel() {
   }, [])
 
   return (
-    <div id="customCarousel" className="carousel slide" ref={ref}>
+    <div id="heroCarousel" className="carousel slide carousel-fade hero-carousel" ref={ref}>
       <div className="carousel-inner">
         {SLIDES.map((slide, i) => (
-          <div key={slide.id} className={`carousel-item${i === 0 ? ' active' : ''}`}>
-            <div className="head col-12 col-md-6"><h1>{slide.title}</h1></div>
-            <div className="text col-12 col-md-7"><p>{slide.text}</p></div>
-            <div className="butt2 col col-7 col-md-3 col-lg-2 text-center">Order Online</div>
+          <div key={slide.eyebrow} className={`carousel-item${i === 0 ? ' active' : ''}`}>
+            <span className="eyebrow">{slide.eyebrow}</span>
+            {i === 0 ? (
+              <h1 className="hero-title">{slide.title[0]} <em>{slide.title[1]}</em></h1>
+            ) : (
+              <h2 className="hero-title">{slide.title[0]} <em>{slide.title[1]}</em></h2>
+            )}
+            <p className="hero-text">{slide.text}</p>
           </div>
         ))}
       </div>
 
-      {/* Custom indicator buttons */}
-      <div className="custom-controls">
+      <div className="hero-actions">
+        <button type="button" className="pbtn pbtn-gold" onClick={orderOnline}>
+          Order Online <i className="fa-solid fa-arrow-right" />
+        </button>
+        <Link to="/menu" className="pbtn pbtn-ghost">View Menu</Link>
+      </div>
+
+      <div className="hero-dots">
         {SLIDES.map((slide, i) => (
           <button
-            key={slide.id}
+            key={slide.eyebrow}
             type="button"
-            className={`custom-btn${active === i ? ' active' : ''}`}
-            data-bs-target="#customCarousel"
+            className={active === i ? 'active' : ''}
+            data-bs-target="#heroCarousel"
             data-bs-slide-to={i}
             aria-label={`Slide ${i + 1}`}
           />

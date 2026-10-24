@@ -1,13 +1,19 @@
-import PageHeader from '../components/PageHeader.jsx'
+import PageHero from '../components/PageHero.jsx'
 import MenuSection from '../components/MenuSection.jsx'
-import Footer from '../components/Footer.jsx'
 
 export default function Menu() {
   return (
-    <div className="menu-page">
-      <PageHeader />
-      <MenuSection description="Full menu item" />
-      <Footer />
-    </div>
+    <>
+      <PageHero
+        title="Our Menu"
+        subtitle="Burgers, pizza, pasta and more — made fresh to order."
+        crumbs={[{ label: 'Menu' }]}
+      />
+      <section className="section section-tight">
+        <div className="container">
+          <MenuSection withTools />
+        </div>
+      </section>
+    </>
   )
 }

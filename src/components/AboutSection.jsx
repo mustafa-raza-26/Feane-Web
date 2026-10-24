@@ -1,21 +1,33 @@
+import { Link } from 'react-router-dom'
 import aboutImg from '../assets/img/about-img.png'
+import Reveal from './Reveal.jsx'
 
 export default function AboutSection() {
   return (
-    <div className="part4">
-      <div className="container">
-        <div className="row about d-flex flex-column-reverse flex-md-row flex-lg-row">
-          <div className="col-12 col-md-6">
-            <img src={aboutImg} className="img-fluid" alt="" />
-          </div>
-          <div className="col-12 col-md-6 about_text">
-            <h1>We Are Feane</h1>
-            <p>
-              There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All
-            </p>
-            <div className="col-6 col-md-4 text-center" id="butt2">Read More</div>
-          </div>
-        </div>
+    <div className="container">
+      <div className="about-grid">
+        <Reveal className="about-media">
+          <img src={aboutImg} alt="A freshly prepared Feane meal" />
+        </Reveal>
+
+        <Reveal className="about-text" delay={120}>
+          <span className="eyebrow">Our story</span>
+          <h2 className="section-title">We Are <em>Feane</em></h2>
+          <p>
+            Feane started with a simple idea: fast food should still be made with care. Every burger, pizza and
+            bowl of pasta is prepared fresh when you order, using quality ingredients and recipes we are proud of.
+          </p>
+          <p>
+            Whether you are dining in, booking a table for the family or ordering to your door, we want every
+            meal to feel like a small celebration.
+          </p>
+          <ul className="check-list">
+            <li><i className="fa-solid fa-circle-check" /> Made fresh, never reheated</li>
+            <li><i className="fa-solid fa-circle-check" /> Order online in under a minute</li>
+            <li><i className="fa-solid fa-circle-check" /> Cash on delivery available</li>
+          </ul>
+          <Link to="/menu" className="pbtn pbtn-gold">Explore the menu <i className="fa-solid fa-arrow-right" /></Link>
+        </Reveal>
       </div>
     </div>
   )

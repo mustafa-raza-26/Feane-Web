@@ -1,58 +1,77 @@
-import Navbar from '../components/Navbar.jsx'
 import HeroCarousel from '../components/HeroCarousel.jsx'
 import MenuSection from '../components/MenuSection.jsx'
 import AboutSection from '../components/AboutSection.jsx'
 import BookTable from '../components/BookTable.jsx'
-import Footer from '../components/Footer.jsx'
+import Features from '../components/Features.jsx'
+import Reveal from '../components/Reveal.jsx'
+import { useOrderOnline } from '../hooks/useOrderOnline.js'
 import offer1 from '../assets/img/o1.jpg'
 import offer2 from '../assets/img/o2.jpg'
 
 const OFFERS = [
-  { title: 'Tasty Thursday', discount: '20%', image: offer1 },
-  { title: 'Pizza Days', discount: '15%', image: offer2 },
+  { title: 'Tasty Thursday', discount: '20%', note: 'Every Thursday on your favourites', image: offer1 },
+  { title: 'Pizza Days', discount: '15%', note: 'Off every pizza on the menu', image: offer2 },
 ]
 
 export default function Home() {
+  const orderOnline = useOrderOnline()
+
   return (
     <>
-      <div className="part1">
+      <section className="hero">
         <div className="container">
-          <Navbar />
           <HeroCarousel />
+          <ul className="hero-badges">
+            <li><i className="fa-regular fa-clock" /> Open daily 9 AM – 1 PM</li>
+            <li><i className="fa-solid fa-truck-fast" /> Fast delivery</li>
+            <li><i className="fa-solid fa-hand-holding-dollar" /> Cash on delivery</li>
+          </ul>
         </div>
-      </div>
+      </section>
 
-      <div className="part2">
+      <section className="section section-tight">
         <div className="container">
-          <div className="row cd p-2 justify-content-center gap-4 gap-md-2 gap-lg-4">
-            {OFFERS.map((offer) => (
-              <div key={offer.title} className="c1 col-12 col-md-6 col-lg-5 p-4">
-                <div className="row text-center align-items-center">
-                  <div className="left col-12 col-md-6">
-                    <img src={offer.image} className="img-fluid" alt={offer.title} />
-                  </div>
-                  <div className="right col-12 col-md-6">
-                    <h2>{offer.title}</h2>
-                    <h3><span>{offer.discount} <sub>Off</sub></span></h3>
-                    <div className="butt2 col-9 mx-auto text-center">
-                      Order Now <i className="fa-solid fa-cart-shopping" />
-                    </div>
-                  </div>
+          <div className="offer-grid">
+            {OFFERS.map((offer, i) => (
+              <Reveal key={offer.title} className="offer-card" delay={i * 100}>
+                <img src={offer.image} alt={offer.title} />
+                <div>
+                  <span className="eyebrow">Limited offer</span>
+                  <h3>{offer.title}</h3>
+                  <p className="offer-discount">{offer.discount} <small>Off</small></p>
+                  <p className="offer-note">{offer.note}</p>
+                  <button type="button" className="pbtn pbtn-gold pbtn-sm" onClick={orderOnline}>
+                    Order now <i className="fa-solid fa-arrow-right" />
+                  </button>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <MenuSection
-        limit={9}
-        description="Veniam debitis quaerat officiis quasi cupiditate quo, quisquam velit, magnam voluptatem repellendus sed eaque"
-      />
+      <section className="section">
+        <div className="container">
+          <Reveal className="section-head">
+            <span className="eyebrow">Our menu</span>
+            <h2 className="section-title">Popular <em>dishes</em></h2>
+            <p>Freshly prepared favourites, picked just for you.</p>
+          </Reveal>
+          <MenuSection limit={9} />
+        </div>
+      </section>
 
-      <AboutSection />
-      <BookTable />
-      <Footer />
+      <section className="section section-alt">
+        <Features />
+      </section>
+
+      <section className="section">
+        <AboutSection />
+      </section>
+
+      <section className="section section-alt" id="book">
+        <BookTable />
+      </section>
     </>
   )
 }

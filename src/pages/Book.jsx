@@ -1,13 +1,17 @@
-import PageHeader from '../components/PageHeader.jsx'
+import PageHero from '../components/PageHero.jsx'
 import BookTable from '../components/BookTable.jsx'
-import Footer from '../components/Footer.jsx'
 
 export default function Book() {
   return (
     <>
-      <PageHeader />
-      <BookTable />
-      <Footer />
+      <PageHero
+        title="Book a Table"
+        subtitle="Reserve your spot and we'll have it ready."
+        crumbs={[{ label: 'Book Table' }]}
+      />
+      <section className="section section-tight">
+        <BookTable />
+      </section>
     </>
   )
 }
