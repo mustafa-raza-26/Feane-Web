@@ -9,8 +9,8 @@ import { createClient } from '@supabase/supabase-js'
 //      VITE_SUPABASE_URL=...
 //      VITE_SUPABASE_ANON_KEY=...
 // ─────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://escflpzgeayghspqdkcr.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_X3l_oYzwfdLDEfOVXIwB2w_wcYfCBn2'
+const SUPABASE_URL = 'https://escflpzgeayghspqdkcr.supabase.co'       // e.g. 'https://xxxxxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_X3l_oYzwfdLDEfOVXIwB2w_wcYfCBn2'  // your project's "anon public" key
 
 const url = SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL
 const anonKey = SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY

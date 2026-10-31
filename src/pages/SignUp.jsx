@@ -63,6 +63,7 @@ export default function SignUp() {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       email: form.email.trim(),
+      password: form.password.trim(),
       number: form.number,
       address: form.address.trim(),
     })

@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext.jsx'
 import { calcTotals, lineTotal, money, unitPrice } from '../lib/pricing.js'
 import { addOrder, clearCheckout, getCheckout } from '../lib/storage.js'
 import { isPhone } from '../lib/validate.js'
+import { saveOrder } from '../lib/orders.js'
 
 const PAYMENTS = [
   { value: 'cod', label: 'Cash on delivery', icon: 'fa-money-bill-wave' },
@@ -31,6 +32,7 @@ export default function Bill() {
   const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '', payment: 'cod' })
   const [errors, setErrors] = useState({})
   const [placed, setPlaced] = useState(null)
+  const [placing, setPlacing] = useState(false)
 
   // prefill the name for signed-in customers
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function Bill() {
     if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }))
   }
 
-  function handleConfirm(e) {
+  async function handleConfirm(e) {
     e.preventDefault()
     const found = {}
     if (form.name.trim().length < 2) found.name = 'Please enter your full name'
@@ -60,6 +62,18 @@ export default function Bill() {
       customer: { name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim() },
       payment: form.payment,
     }
+
+    // 1) save to Supabase (table "addToCart"); if it fails keep the cart so nothing is lost
+    setPlacing(true)
+    const { skipped, error } = await saveOrder(order, user)
+    setPlacing(false)
+    if (error) {
+      toast.error(`Could not place your order: ${error.message}`)
+      return
+    }
+    if (skipped) toast.info('Supabase is not configured – order saved on this device only.')
+
+    // 2) local history (shown on the profile page) + cleanup
     addOrder(order)
     if (fromCart) clearCart()
     clearCheckout()
@@ -182,8 +196,8 @@ export default function Bill() {
               <div className="sum-row"><span>Delivery fee</span><span>{money(totals.delivery)}</span></div>
               <div className="sum-total"><span>Total</span><span>{money(totals.total)}</span></div>
 
-              <button type="submit" className="pbtn pbtn-gold pbtn-block">
-                Confirm &amp; place order <i className="fa-solid fa-check" />
+              <button type="submit" className="pbtn pbtn-gold pbtn-block" disabled={placing}>
+                {placing ? 'Placing order…' : <>Confirm &amp; place order <i className="fa-solid fa-check" /></>}
               </button>
               {fromCart && <Link to="/cart" className="link-muted center">← Edit cart</Link>}
             </aside>
